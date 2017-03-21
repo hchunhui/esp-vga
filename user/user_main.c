@@ -34,9 +34,8 @@ void ICACHE_FLASH_ATTR user_init(void)
 
 	struct softap_config ap_conf = {
 		.ssid = "esp",
-		.password = "12345678",
 		.ssid_len = 3,
-		.authmode = AUTH_WPA_WPA2_PSK,
+		.authmode = AUTH_OPEN,
 		.max_connection = 4,
 	};
 
