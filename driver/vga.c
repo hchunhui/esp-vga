@@ -6,10 +6,27 @@
 #include "driver/spi.h"
 #include "driver/vga.h"
 
+#define US_TO_RTC_TIMER_TICKS(t) \
+	((t) ? \
+	 (((t) > 0x35A) ? \
+	  (((t)>>2) * ((APB_CLK_FREQ>>4)/250000) + ((t)&0x3) * ((APB_CLK_FREQ>>4)/1000000)) : \
+	  (((t) *(APB_CLK_FREQ>>4)) / 1000000)) : \
+	 0)
+
+#define FRC1_ENABLE_TIMER BIT7
+#define FRC1_AUTO_LOAD BIT6
+
+//TIMER PREDIVED MODE
 typedef enum {
-    FRC1_SOURCE = 0,
-    NMI_SOURCE = 1,
-} FRC1_TIMER_SOURCE_TYPE;
+	DIVDED_BY_1 = 0,
+	DIVDED_BY_16 = 4,
+	DIVDED_BY_256 = 8,
+} TIMER_PREDIVED_MODE;
+
+typedef enum {
+	TM_LEVEL_INT = 1,
+	TM_EDGE_INT = 0,
+} TIMER_INT_MODE;
 
 static void spi_mast_send1(uint8 spi_no, void *data, int len)
 {
@@ -42,7 +59,6 @@ static int vsync;
 
 static void vga_handler(void)
 {
-	hw_timer_arm(29);
 	GPIO_OUTPUT_SET(VGA_HSYNC_PIN, 0);
 	spi_mast_send1(HSPI, line, 64);
 	os_delay_us(2);
@@ -100,7 +116,12 @@ void vga_init(void)
 	vsync = 1;
 	spi_master_init(HSPI, 0, 0, 4);
 	spi_mast_byte_order(HSPI, SPI_ORDER_LSB);
-	hw_timer_init(NMI_SOURCE, 0);
-	hw_timer_set_func(vga_handler);
-	hw_timer_arm(100);
+
+	// setup timer
+	RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
+		      FRC1_AUTO_LOAD | DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
+        ETS_FRC_TIMER1_NMI_INTR_ATTACH(vga_handler);
+	RTC_REG_WRITE(FRC1_LOAD_ADDRESS, US_TO_RTC_TIMER_TICKS(32));
+	TM1_EDGE_INT_ENABLE();
+	ETS_FRC1_INTR_ENABLE();
 }
