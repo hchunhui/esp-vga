@@ -40,6 +40,9 @@ void ICACHE_FLASH_ATTR user_init(void)
 	};
 
 	uart_init(BIT_RATE_115200, BIT_RATE_115200);
+	system_update_cpu_freq(160);
+	os_printf("current cpu freq: %d\n", system_get_cpu_freq());
+
 	gpio_init();
 	os_printf("\nuser_init...\n");
 
