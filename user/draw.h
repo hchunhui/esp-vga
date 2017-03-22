@@ -4,6 +4,9 @@
 #include "ets_sys.h"
 #include "osapi.h"
 
+#define FONT_WIDTH 8
+#define FONT_HEIGHT 16
+
 void ICACHE_FLASH_ATTR draw_asc(int x, int y, int c);
 void ICACHE_FLASH_ATTR draw_gb(int x, int y, int fst, int snd);
 

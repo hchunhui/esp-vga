@@ -9,6 +9,9 @@
 struct espconn server;
 esp_tcp esptcp;
 
+#define N_ROWS (VGA_HEIGHT / FONT_HEIGHT)
+#define N_COLS (VGA_WIDTH / FONT_WIDTH)
+
 int x, y;
 
 static void ICACHE_FLASH_ATTR
@@ -20,10 +23,10 @@ server_sent_cb(void *arg)
 
 static void ICACHE_FLASH_ATTR new_line()
 {
-	if (y + 16 >= 480)
+	if (y + 1 >= N_ROWS)
 		vga_scroll_down(16);
 	else
-		y += 16;
+		y += 1;
 }
  
 static void ICACHE_FLASH_ATTR
@@ -35,25 +38,25 @@ server_recv_cb(void *arg, char *data, unsigned short len)
 
 	for (i = 0; i < len; i++) {
 		if (data[i] >= 0xa0 && i < len - 1) {
-			if (x + 16 > 512) {
+			if (x + 2 > N_COLS) {
 				x = 0;
 				new_line();
 			}
-			draw_gb(x, y, data[i], data[i+1]);
-			x += 16;
+			draw_gb(x * FONT_WIDTH, y * FONT_HEIGHT, data[i], data[i+1]);
+			x += 2;
 			i++;
 		} else if (data[i] == '\n') {
 			x = 0;
 			new_line();
 		} else {
-			if (x + 8 > 512) {
+			if (x + 1 > N_COLS) {
 				x = 0;
 				new_line();
 			}			
-			draw_asc(x, y, data[i]);
-			x += 8;
+			draw_asc(x * FONT_WIDTH, y * FONT_HEIGHT, data[i]);
+			x += 1;
 		}
-		if (x >= 512) {
+		if (x >= N_COLS) {
 			x = 0;
 			new_line();
 		}
