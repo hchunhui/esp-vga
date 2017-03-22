@@ -103,4 +103,5 @@ net_init()
 
 	int ret = espconn_accept(&server);
 	os_printf("espconn_accept: %d\n", ret);
+	espconn_regist_time(&server, 0, 0);
 }
